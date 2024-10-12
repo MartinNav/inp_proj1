@@ -1,12 +1,14 @@
 -- cpu.vhd: Simple 8-bit CPU (BrainFuck interpreter)
 -- Copyright (C) 2024 Brno University of Technology,
 --                    Faculty of Information Technology
--- Author(s): jmeno <login AT stud.fit.vutbr.cz>
+-- Author(s): Martin Navrátil <xnavram00 AT stud.fit.vutbr.cz>
 --
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
+
+type cpu_state is (prepare, run);
 
 -- ----------------------------------------------------------------------------
 --                        Entity declaration
@@ -46,6 +48,8 @@ end cpu;
 --                      Architecture declaration
 -- ----------------------------------------------------------------------------
 architecture behavioral of cpu is
+  signal end_of_code_ptr : std_logic_vector(12 downto 0)=(others => '0');
+  signal state : cpu_state=prepare;
 begin
 
  -- pri tvorbe kodu reflektujte rady ze cviceni INP, zejmena mejte na pameti, ze 
@@ -56,3 +60,18 @@ begin
 
 end behavioral;
 
+entity find_end_of_code is
+  port (
+    CLK : in std_logic;
+    RESET : in std_logic;
+    END_OF_CODE_ADDR : out std_logic_vector(12 downto 0);
+    DONE : out std_logic
+  );
+end entity find_data ;
+architecture behavioral of find_end_of_code is
+  
+begin
+  
+  
+  
+end architecture behavioral;
