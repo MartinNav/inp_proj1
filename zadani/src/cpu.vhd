@@ -8,7 +8,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-type cpu_state is (prepare, run);
+type cpu_state is (prepare, ready, run, done);
 
 -- ----------------------------------------------------------------------------
 --                        Entity declaration
@@ -49,7 +49,7 @@ end cpu;
 -- ----------------------------------------------------------------------------
 architecture behavioral of cpu is
   signal end_of_code_ptr : std_logic_vector(12 downto 0)=(others => '0');
-  signal state : cpu_state=prepare;
+  signal state : cpu_state:=prepare;
 begin
 
  -- pri tvorbe kodu reflektujte rady ze cviceni INP, zejmena mejte na pameti, ze 
@@ -62,16 +62,40 @@ end behavioral;
 
 entity find_end_of_code is
   port (
+    --when this element is being activated DATA_RDWR should be set to 1
     CLK : in std_logic;
+    EN : in std_logic;
     RESET : in std_logic;
+    DATA_RDATA: in std_logic_vector(7 downto 0);--The actual data
+    DATA_ADDR :out std_logic_vector(12 downto 0);--this is the pointer to currently read data
     END_OF_CODE_ADDR : out std_logic_vector(12 downto 0);
-    DONE : out std_logic
+    DONE : out std_logic--if it is found it will be 1 otherwise it will be 0
   );
-end entity find_data ;
+end entity find_end_of_code;
 architecture behavioral of find_end_of_code is
+  signal CURR_ADDR : std_logic_vector(12 downto 0) := (others => '0');
   
 begin
   
+  process(CLK)
+  begin
+    if rising_edge(CLK) and EN='1' then
+      END_OF_CODE_ADDR<=(others => '0');
+      if DATA_RDATA /= X"40" then
+        CURR_ADDR<=std_logic_vector(unsigned(CURR_ADDR)+1);
+      else
+        DONE<='1';
+        END_OF_CODE_ADDR<=CURR_ADDR;
+      end if;
+      if RESET='1' then
+        CURR_ADDR<=(others => '0');
+        DONE<='0';
+      end if;
+      DATA_ADDR<=CURR_ADDR;
+      
+    end if;
+    
+  end process ;
   
   
 end architecture behavioral;
