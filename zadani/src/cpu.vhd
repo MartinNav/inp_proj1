@@ -48,7 +48,7 @@ end cpu;
 --                      Architecture declaration
 -- ----------------------------------------------------------------------------
 architecture behavioral of cpu is
-  signal end_of_code_ptr : std_logic_vector(12 downto 0)=(others => '0');
+  signal end_of_code_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal state : cpu_state:=prepare;
 begin
 
