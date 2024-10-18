@@ -49,12 +49,14 @@ end cpu;
 architecture behavioral of cpu is
 type cpu_state is (prepare_st, ready_st, run_st, done_st, decode_st,
 dec_ptr_inst, inc_ptr_inst,-- these instructions are used to modify data ptr
-inc_val_inst,vec_val_inc);
+inc_val_inst_p,dec_val_inc_p,-- will be used to prepare the instruction to be executed
+inc_val_inst_w,dec_val_inc_w);
   signal end_of_code_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal data_ptr: std_logic_vector(12 downto 0):=(others => '0');
   signal instruction_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal setup_state : std_logic:='1';
   signal state : cpu_state:=prepare_st;
+  signal acc_reg: std_logic_vector(12 downto 0):=(others => '0');
 begin
 
  -- pri tvorbe kodu reflektujte rady ze cviceni INP, zejmena mejte na pameti, ze 
@@ -89,6 +91,11 @@ begin
             state<=inc_ptr_inst;
           when X"3C" =>--that is < instruction
             state<=dec_ptr_inst;
+          when X"2B" =>--that is + instruction prefatch
+            state<=inc_val_inst_p;
+          when X"2D" =>--that is - instruction prefatch
+            state<=dec_val_inc_p;
+          --must implement execution in next stages of this function
 
           when others =>
             
@@ -111,6 +118,9 @@ begin
           data_ptr<=unsigned(data_ptr)+1;
         when dec_ptr_inst=>
           data_ptr<=unsigned(data_ptr)-1;
+        --when inc_val_inst_p=>-- will do nothing and wait for mem
+          when inc_val_inst_w=>
+            DATA_WDATA<=unsigned(DATA_RDATA)+1;
           
 
         when others =>
@@ -121,6 +131,32 @@ begin
     end if;
     
   end process INSTRUCT_EXEC;
+
+  MEMORY_MANAGER: process(CLK)
+  begin
+    if rising_edge(CLK) then
+      DATA_RDWR<='1';
+      case state is
+        when prepare_st=>
+          DATA_ADDR<=end_of_code_ptr;
+        when dec_val_inc_p=>
+          DATA_RDWR<='1';
+          DATA_ADDR<=data_ptr;
+        when dec_val_inc_w=>
+          DATA_RDWR<='0';
+          DATA_ADDR<=data_ptr;
+
+          
+
+        when others =>
+          DATA_ADDR<=(others => '0');
+          
+
+      end case;
+      
+    end if;
+    
+  end process MEMORY_MANAGER;
 
 
 
