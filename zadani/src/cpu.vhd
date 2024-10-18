@@ -47,9 +47,12 @@ end cpu;
 --                      Architecture declaration
 -- ----------------------------------------------------------------------------
 architecture behavioral of cpu is
-type cpu_state is (prepare_st, ready_st, run_st, done_st);
+type cpu_state is (prepare_st, ready_st, run_st, done_st, decode_st,
+dec_ptr_inst, inc_ptr_inst,-- these instructions are used to modify data ptr
+inc_val_inst,vec_val_inc);
   signal end_of_code_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal data_ptr: std_logic_vector(12 downto 0):=(others => '0');
+  signal instruction_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal setup_state : std_logic:='1';
   signal state : cpu_state:=prepare_st;
 begin
@@ -62,9 +65,8 @@ begin
  -- this process will set the end of code ptr
   setup: process(CLK)
   begin
-    if rising_edge(CLK) and setup_state='1' then -- may need to change the setup_state to cpu_state
+    if rising_edge(CLK) and state=prepare_st then -- may need to change the setup_state to cpu_state
       setup_state<='1';
-      data_ptr<=end_of_code_ptr;
       if DATA_RDATA=X"40" then
         setup_state<='0';
         else
@@ -79,11 +81,49 @@ begin
     if rising_edge(CLK) then
       if setup_state='1' then
         state<=prepare_st;
+      else
+        if DATA_RDWR='1' then
+          
+        case DATA_RDATA is
+          when X"3E" =>--that is > instruction
+            state<=inc_ptr_inst;
+          when X"3C" =>--that is < instruction
+            state<=dec_ptr_inst;
+
+          when others =>
+            
+
+        end case;
+        end if;
       end if;
       
     end if;
     
   end process state_manager;
+
+  INSTRUCT_EXEC: process(CLK,state)
+  begin
+    if rising_edge(CLK) then
+      case state is
+        when prepare_st=> --this will prepare on case when it is being set up
+        data_ptr<=end_of_code_ptr;
+        when inc_ptr_inst=>
+          data_ptr<=unsigned(data_ptr)+1;
+        when dec_ptr_inst=>
+          data_ptr<=unsigned(data_ptr)-1;
+          
+
+        when others =>
+          
+
+      end case;
+      
+    end if;
+    
+  end process INSTRUCT_EXEC;
+
+
+
 
 
 end behavioral;
