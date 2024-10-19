@@ -135,6 +135,10 @@ begin
       if RESET='1' then
         state<=reset_st;
         READY<='0';
+      -- this is very temporary (WARNING)
+        IN_REQ<='0';
+        OUT_WE<='0';
+      -- end of temporary section
       end if;
       
     end if;
