@@ -159,7 +159,7 @@ begin
     if rising_edge(CLK) then
       case state is
         when prepare_st=> --this will prepare on case when it is being set up
-        data_ptr<=end_of_code_ptr;
+        data_ptr<=unsigned(end_of_code_ptr)+1;
         when inc_ptr_inst=>
           data_ptr<=unsigned(data_ptr)+1;
         when dec_ptr_inst=>
@@ -178,7 +178,7 @@ begin
   MEMORY_MANAGER: process(CLK)
   begin
     if rising_edge(CLK) then
-      DATA_RDWR<='1';
+     -- DATA_RDWR<='1';
       case state is
         when prepare_st=>
           DATA_ADDR<=end_of_code_ptr;
@@ -196,14 +196,30 @@ begin
           DATA_ADDR<=data_ptr;
           DATA_EN<='1';
           instruction_ptr<=unsigned(instruction_ptr)+1;
+         when inc_val_inst_p=>--prepare
+          DATA_RDWR<='1';
+          DATA_ADDR<=data_ptr;
+          DATA_EN<='1';
+        when inc_val_inst_m=>--middle of execution
+          DATA_RDWR<='0';
+          DATA_ADDR<=data_ptr;
+          DATA_EN<='1';
+        when inc_val_inst_w=>--write
+          DATA_RDWR<='0';
+          DATA_ADDR<=data_ptr;
+          DATA_EN<='1';
+          instruction_ptr<=unsigned(instruction_ptr)+1;
         when fetch_st=>
+      DATA_RDWR<='1';
           DATA_ADDR<=instruction_ptr;
           DATA_EN<='1';
         when reset_st=>
+      DATA_RDWR<='1';
           DATA_ADDR<=(others => '0');
           DATA_EN<='0';
 
         when others =>
+      DATA_RDWR<='1';
           DATA_ADDR<=(others => '0');
           -- if it is comment in instructions we have to go over it
           instruction_ptr<=unsigned(instruction_ptr)+1;
