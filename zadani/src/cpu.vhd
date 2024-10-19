@@ -84,7 +84,7 @@ begin
       if setup_state='1' then
         state<=prepare_st;
       else
-        if DATA_RDWR='1' then
+        --if DATA_RDWR='1' then
           
         case DATA_RDATA is
           when X"3E" =>--that is > instruction
@@ -101,7 +101,7 @@ begin
             
 
         end case;
-        end if;
+        --end if;
       end if;
       
     end if;
