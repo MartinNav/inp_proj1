@@ -51,7 +51,7 @@ type cpu_state is (prepare_st, ready_st, run_st,reset_st, done_st, fetch_st,deco
 dec_ptr_inst, inc_ptr_inst,-- these instructions are used to modify data ptr
 inc_val_inst_p,dec_val_inc_p,-- will be used to prepare the instruction to be executed
 inc_val_inst_m,dec_val_inc_m,-- will be in middle of instruction execution
-inc_val_inst_w,dec_val_inc_w);
+inc_val_inst_w,dec_val_inc_w, nop_inst);
   signal end_of_code_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal data_ptr: std_logic_vector(12 downto 0):=(others => '0');
   signal instruction_ptr : std_logic_vector(12 downto 0):=(others => '0');
@@ -121,6 +121,8 @@ begin
             state<=done_st;
           --must implement execution in next stages of this function
           when others =>
+            state<=nop_inst;
+
 
         end case;
       end if;
@@ -135,7 +137,9 @@ begin
         when dec_val_inc_m=>state<=dec_val_inc_w;
         when dec_val_inc_w=>state<=fetch_st;
         when done_st=>DONE<='1';
+        when nop_inst=>state<=fetch_st;
         when others =>
+          
 
       end case;
         --end if;
@@ -160,6 +164,7 @@ begin
       case state is
         when prepare_st=> --this will prepare on case when it is being set up
           data_ptr<=unsigned(end_of_code_ptr)-1;--this is hacky solution but it should work therefore there is no reason to change it
+          --data_ptr<=end_of_code_ptr;
         when inc_ptr_inst=>
           data_ptr<=unsigned(data_ptr)+1;
         when dec_ptr_inst=>
@@ -219,6 +224,8 @@ begin
       DATA_RDWR<='1';
           DATA_ADDR<=(others => '0');
           DATA_EN<='0';
+        when nop_inst=>
+          instruction_ptr<=unsigned(instruction_ptr)+1;
 
         when others =>
       DATA_RDWR<='1';
