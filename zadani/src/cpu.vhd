@@ -70,12 +70,15 @@ begin
     if rising_edge(CLK) then -- may need to change the setup_state to cpu_state
       if state=prepare_st and EN='1' then
         
-      setup_state<='1';
+        if setup_state='1' then
+          
       if DATA_RDATA=X"40" and setup_state='1' then
         setup_state<='0';
         else
+      setup_state<='1';
         end_of_code_ptr<=unsigned(end_of_code_ptr)+1;
       end if;
+        end if;
     else
       if state=reset_st then
         setup_state<='1';
@@ -192,21 +195,10 @@ begin
           DATA_ADDR<=(others => '0');
           DATA_EN<='0';
 
-          
-
         when others =>
           DATA_ADDR<=(others => '0');
-          
-
       end case;
-      
     end if;
-    
   end process MEMORY_MANAGER;
-
-
-
-
-
 end behavioral;
 
