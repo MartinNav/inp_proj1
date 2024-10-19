@@ -167,6 +167,8 @@ begin
         --when inc_val_inst_p=>-- will do nothing and wait for mem
           when inc_val_inst_w=>
             DATA_WDATA<=unsigned(DATA_RDATA)+1;
+          when dec_val_inc_w=>
+            DATA_WDATA<=unsigned(DATA_RDATA)-1;
         when reset_st=>
           data_ptr<=(others => '0');
           DATA_WDATA<=(others => '0');
