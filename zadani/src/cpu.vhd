@@ -89,10 +89,13 @@ begin
   state_manager: process(CLK)
   begin
     if rising_edge(CLK) then
+      READY<='1';
+      DONE<='0';
       if EN='1' then
         
       if setup_state='1' then
         state<=prepare_st;
+        READY<='0';
       else
         --when we are in prepare state and there is nothing else to do it should be set to fetch instructions
         if state=prepare_st then
@@ -131,6 +134,7 @@ begin
       end if;
       if RESET='1' then
         state<=reset_st;
+        READY<='0';
       end if;
       
     end if;
