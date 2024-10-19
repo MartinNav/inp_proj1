@@ -71,7 +71,7 @@ begin
       if state=prepare_st and EN='1' then
         
       setup_state<='1';
-      if DATA_RDATA=X"40" then
+      if DATA_RDATA=X"40" and setup_state='1' then
         setup_state<='0';
         else
         end_of_code_ptr<=unsigned(end_of_code_ptr)+1;
@@ -113,6 +113,8 @@ begin
             state<=inc_val_inst_p;
           when X"2D" =>--that is - instruction prefatch
             state<=dec_val_inc_p;
+          when X"40" =>
+            state<=done_st;
           --must implement execution in next stages of this function
           when others =>
 
@@ -126,6 +128,7 @@ begin
         when inc_val_inst_w=>state<=fetch_st;
         when dec_val_inc_p=>state<=dec_val_inc_w;
         when dec_val_inc_w=>state<=fetch_st;
+        when done_st=>DONE<='1';
         when others =>
 
       end case;
