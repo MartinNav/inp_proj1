@@ -50,6 +50,7 @@ architecture behavioral of cpu is
 type cpu_state is (prepare_st, ready_st, run_st,reset_st, done_st, fetch_st,decode_st,
 dec_ptr_inst, inc_ptr_inst,-- these instructions are used to modify data ptr
 inc_val_inst_p,dec_val_inc_p,-- will be used to prepare the instruction to be executed
+inc_val_inst_m,dec_val_inc_m,-- will be in middle of instruction execution
 inc_val_inst_w,dec_val_inc_w);
   signal end_of_code_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal data_ptr: std_logic_vector(12 downto 0):=(others => '0');
@@ -127,9 +128,11 @@ begin
       case state is 
         when inc_ptr_inst=>state<=fetch_st;
         when dec_ptr_inst=>state<=fetch_st;
-        when inc_val_inst_p=>state<=inc_val_inst_w;
+        when inc_val_inst_p=>state<=inc_val_inst_m;
+        when inc_val_inst_m=>state<=inc_val_inst_w;
         when inc_val_inst_w=>state<=fetch_st;
-        when dec_val_inc_p=>state<=dec_val_inc_w;
+        when dec_val_inc_p=>state<=dec_val_inc_m;
+        when dec_val_inc_m=>state<=dec_val_inc_w;
         when dec_val_inc_w=>state<=fetch_st;
         when done_st=>DONE<='1';
         when others =>
@@ -180,14 +183,19 @@ begin
         when prepare_st=>
           DATA_ADDR<=end_of_code_ptr;
           DATA_EN<='1';
-        when dec_val_inc_p=>
+        when dec_val_inc_p=>--prepare
           DATA_RDWR<='1';
           DATA_ADDR<=data_ptr;
           DATA_EN<='1';
-        when dec_val_inc_w=>
+        when dec_val_inc_m=>--middle of execution
           DATA_RDWR<='0';
           DATA_ADDR<=data_ptr;
           DATA_EN<='1';
+        when dec_val_inc_w=>--write
+          DATA_RDWR<='0';
+          DATA_ADDR<=data_ptr;
+          DATA_EN<='1';
+          instruction_ptr<=unsigned(instruction_ptr)+1;
         when fetch_st=>
           DATA_ADDR<=instruction_ptr;
           DATA_EN<='1';
@@ -197,6 +205,9 @@ begin
 
         when others =>
           DATA_ADDR<=(others => '0');
+          -- if it is comment in instructions we have to go over it
+          instruction_ptr<=unsigned(instruction_ptr)+1;
+
       end case;
     end if;
   end process MEMORY_MANAGER;
