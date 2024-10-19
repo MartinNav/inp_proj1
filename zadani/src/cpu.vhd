@@ -47,7 +47,7 @@ end cpu;
 --                      Architecture declaration
 -- ----------------------------------------------------------------------------
 architecture behavioral of cpu is
-type cpu_state is (prepare_st, ready_st, run_st, done_st, fetch_st,decode_st,
+type cpu_state is (prepare_st, ready_st, run_st,reset_st, done_st, fetch_st,decode_st,
 dec_ptr_inst, inc_ptr_inst,-- these instructions are used to modify data ptr
 inc_val_inst_p,dec_val_inc_p,-- will be used to prepare the instruction to be executed
 inc_val_inst_w,dec_val_inc_w);
@@ -67,20 +67,30 @@ begin
  -- this process will set the end of code ptr
   setup: process(CLK)
   begin
-    if rising_edge(CLK) and state=prepare_st then -- may need to change the setup_state to cpu_state
+    if rising_edge(CLK) then -- may need to change the setup_state to cpu_state
+      if state=prepare_st and EN='1' then
+        
       setup_state<='1';
       if DATA_RDATA=X"40" then
         setup_state<='0';
         else
         end_of_code_ptr<=unsigned(end_of_code_ptr)+1;
       end if;
+    else
+      if state=reset_st then
+        setup_state<='1';
+        end_of_code_ptr<=(others => '0');
+      end if;
       
+      end if;
     end if;
   end process setup;
 
   state_manager: process(CLK)
   begin
     if rising_edge(CLK) then
+      if EN='1' then
+        
       if setup_state='1' then
         state<=prepare_st;
       else
@@ -118,6 +128,10 @@ begin
       end case;
         --end if;
       end if;
+      end if;
+      if RESET='1' then
+        state<=reset_st;
+      end if;
       
     end if;
     
@@ -136,15 +150,12 @@ begin
         --when inc_val_inst_p=>-- will do nothing and wait for mem
           when inc_val_inst_w=>
             DATA_WDATA<=unsigned(DATA_RDATA)+1;
-          
-
+        when reset_st=>
+          data_ptr<=(others => '0');
+          DATA_WDATA<=(others => '0');
         when others =>
-          
-
       end case;
-      
     end if;
-    
   end process INSTRUCT_EXEC;
 
   MEMORY_MANAGER: process(CLK)
@@ -154,14 +165,21 @@ begin
       case state is
         when prepare_st=>
           DATA_ADDR<=end_of_code_ptr;
+          DATA_EN<='1';
         when dec_val_inc_p=>
           DATA_RDWR<='1';
           DATA_ADDR<=data_ptr;
+          DATA_EN<='1';
         when dec_val_inc_w=>
           DATA_RDWR<='0';
           DATA_ADDR<=data_ptr;
+          DATA_EN<='1';
         when fetch_st=>
           DATA_ADDR<=instruction_ptr;
+          DATA_EN<='1';
+        when reset_st=>
+          DATA_ADDR<=(others => '0');
+          DATA_EN<='0';
 
           
 
