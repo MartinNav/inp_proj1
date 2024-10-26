@@ -204,11 +204,11 @@ begin
           DATA_RDWR<='0';
           DATA_ADDR<=data_ptr;
           DATA_EN<='1';
+          instruction_ptr<=unsigned(instruction_ptr)+1;
         when dec_val_inc_w=>--write
           DATA_RDWR<='0';
           DATA_ADDR<=data_ptr;
           DATA_EN<='1';
-          instruction_ptr<=unsigned(instruction_ptr)+1;
          when inc_val_inst_p=>--prepare
           DATA_RDWR<='1';
           DATA_ADDR<=data_ptr;
