@@ -232,6 +232,9 @@ begin
           DATA_EN<='0';
         when nop_inst=>
           instruction_ptr<=unsigned(instruction_ptr)+1;
+        when done_st=>
+          instruction_ptr<=instruction_ptr;
+          DATA_EN<='0';
 
         when others =>
       DATA_RDWR<='1';
