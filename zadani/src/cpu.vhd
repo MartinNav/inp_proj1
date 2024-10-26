@@ -58,6 +58,7 @@ inc_val_inst_w,dec_val_inc_w, nop_inst);
   signal setup_state : std_logic:='1';
   signal state : cpu_state:=prepare_st;
   signal acc_reg: std_logic_vector(12 downto 0):=(others => '0');
+  signal fetch_time_ctr : std_logic_vector(2 downto 0):=(others=>'0');--will count the time spent fetching instructions
 begin
 
  -- pri tvorbe kodu reflektujte rady ze cviceni INP, zejmena mejte na pameti, ze 
@@ -66,7 +67,7 @@ begin
  --      - u synchronnich komponent obsahuje sensitivity list pouze CLK a RESET a 
  --      - u kombinacnich komponent obsahuje sensitivity list vsechny ctene signaly. 
  -- this process will set the end of code ptr
-  setup: process(CLK)
+  setup: process(CLK,state,RESET)
   begin
     if rising_edge(CLK) then -- may need to change the setup_state to cpu_state
       if state=prepare_st and EN='1' then
@@ -90,7 +91,7 @@ begin
     end if;
   end process setup;
 
-  state_manager: process(CLK)
+  state_manager: process(CLK,RESET,state)
   begin
     if rising_edge(CLK) then
       READY<='1';
@@ -108,6 +109,7 @@ begin
         --if DATA_RDWR='1' then
           
         if state=fetch_st then
+          fetch_time_ctr<=(others => '0');-- allways it will be converted to zero when not in use
         case DATA_RDATA is
           when X"3E" =>--that is > instruction
             state<=inc_ptr_inst;
@@ -121,7 +123,11 @@ begin
             state<=done_st;
           --must implement execution in next stages of this function
           when others =>
-            state<=nop_inst;
+            fetch_time_ctr<=unsigned(fetch_time_ctr)+1;--sometimes it may just be waiting for the instruction data
+            if fetch_time_ctr="111" then
+              state<=nop_inst;
+              fetch_time_ctr<=(others => '0');
+            end if;
 
 
         end case;
@@ -182,7 +188,7 @@ begin
     end if;
   end process INSTRUCT_EXEC;
 
-  MEMORY_MANAGER: process(CLK)
+  MEMORY_MANAGER: process(CLK,state)
   begin
     if rising_edge(CLK) then
      -- DATA_RDWR<='1';
@@ -211,11 +217,11 @@ begin
           DATA_RDWR<='0';
           DATA_ADDR<=data_ptr;
           DATA_EN<='1';
+          instruction_ptr<=unsigned(instruction_ptr)+1;
         when inc_val_inst_w=>--write
           DATA_RDWR<='1';
           DATA_ADDR<=data_ptr;
           DATA_EN<='1';
-          instruction_ptr<=unsigned(instruction_ptr)+1;
         when fetch_st=>
       DATA_RDWR<='1';
           DATA_ADDR<=instruction_ptr;
