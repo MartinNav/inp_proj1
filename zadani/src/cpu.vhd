@@ -60,6 +60,7 @@ inc_val_inst_w,dec_val_inc_w, nop_inst);
   signal state : cpu_state:=prepare_st;
   signal acc_reg: std_logic_vector(12 downto 0):=(others => '0');
   signal fetch_time_ctr : std_logic_vector(2 downto 0):=(others=>'0');--will count the time spent fetching instructions
+  signal cycle_counter : std_logic_vector(24 downto 0):=(others => '0');--counting number of cycles from start
 begin
 
  -- pri tvorbe kodu reflektujte rady ze cviceni INP, zejmena mejte na pameti, ze 
@@ -71,9 +72,11 @@ begin
   setup: process(CLK,state,RESET)
   begin
     if rising_edge(CLK) then -- may need to change the setup_state to cpu_state
+          cycle_counter<=unsigned(cycle_counter)+1;
       if state=prepare_st and EN='1' then
         
         if setup_state='1' then
+          cycle_counter<=(others => '0');
           
       if DATA_RDATA=X"40" and setup_state='1' then
         setup_state<='0';
@@ -88,6 +91,9 @@ begin
         end_of_code_ptr<=(others => '0');
       end if;
       
+      end if;
+      if state=done_st then
+          cycle_counter<=(others => '0');
       end if;
     end if;
   end process setup;
