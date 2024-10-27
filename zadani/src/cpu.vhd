@@ -49,6 +49,7 @@ end cpu;
 architecture behavioral of cpu is
 type cpu_state is (prepare_st, ready_st, run_st,reset_st, done_st, fetch_st,decode_st,
 dec_ptr_inst, inc_ptr_inst,-- these instructions are used to modify data ptr
+dec_ptr_inst_w, inc_ptr_inst_w,-- these instructions are used to modify data ptr
 inc_val_inst_p,dec_val_inc_p,-- will be used to prepare the instruction to be executed
 inc_val_inst_m,dec_val_inc_m,-- will be in middle of instruction execution
 inc_val_inst_w,dec_val_inc_w, nop_inst);
@@ -123,6 +124,7 @@ begin
             state<=done_st;
           --must implement execution in next stages of this function
           when others =>
+            -- TODO: fix and make it wait exacly 3 cycles
             fetch_time_ctr<=unsigned(fetch_time_ctr)+1;--sometimes it may just be waiting for the instruction data
             if fetch_time_ctr="111" then
               state<=nop_inst;
@@ -134,8 +136,10 @@ begin
       end if;
       -- this will be executed after end of every instruction
       case state is 
-        when inc_ptr_inst=>state<=fetch_st;
-        when dec_ptr_inst=>state<=fetch_st;
+        when inc_ptr_inst=>state<=inc_ptr_inst_w;
+        when dec_ptr_inst=>state<=dec_ptr_inst_w;
+        when inc_ptr_inst_w=>state<=fetch_st;
+        when dec_ptr_inst_w=>state<=fetch_st;
         when inc_val_inst_p=>state<=inc_val_inst_m;
         when inc_val_inst_m=>state<=inc_val_inst_w;
         when inc_val_inst_w=>state<=fetch_st;
@@ -235,6 +239,13 @@ begin
         when done_st=>
           instruction_ptr<=instruction_ptr;
           DATA_EN<='0';
+        when inc_ptr_inst=>
+          DATA_ADDR<=unsigned(instruction_ptr)+1;
+          instruction_ptr<=unsigned(instruction_ptr)+1;
+          DATA_EN<='1';
+        when inc_ptr_inst_w=>
+          DATA_ADDR<=instruction_ptr;
+          DATA_EN<='1';
 
         when others =>
       DATA_RDWR<='1';
