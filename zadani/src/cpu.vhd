@@ -172,7 +172,11 @@ begin
     if rising_edge(CLK) then
       case state is
         when prepare_st=> --this will prepare on case when it is being set up
+          if end_of_code_ptr/="000000000000" then
           data_ptr<=unsigned(end_of_code_ptr)-1;--this is hacky solution but it should work therefore there is no reason to change it
+          else
+            data_ptr<=(others => '0');
+          end if;
           --data_ptr<=end_of_code_ptr;
         when inc_ptr_inst=>
           data_ptr<=unsigned(data_ptr)+1;
