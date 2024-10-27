@@ -109,8 +109,10 @@ begin
         end if;
         --if DATA_RDWR='1' then
           
-        if state=fetch_st then
           fetch_time_ctr<=(others => '0');-- allways it will be converted to zero when not in use
+        if state=fetch_st then
+          if fetch_time_ctr="10" then
+            
         case DATA_RDATA is
           when X"3E" =>--that is > instruction
             state<=inc_ptr_inst;
@@ -125,14 +127,11 @@ begin
           --must implement execution in next stages of this function
           when others =>
             -- TODO: fix and make it wait exacly 3 cycles
-            fetch_time_ctr<=unsigned(fetch_time_ctr)+1;--sometimes it may just be waiting for the instruction data
-            if fetch_time_ctr="111" then
               state<=nop_inst;
-              fetch_time_ctr<=(others => '0');
-            end if;
-
-
         end case;
+        else
+          fetch_time_ctr<=unsigned(fetch_time_ctr)+1;
+          end if;
       end if;
       -- this will be executed after end of every instruction
       case state is 
