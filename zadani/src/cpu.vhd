@@ -166,6 +166,8 @@ begin
       -- this is very temporary (WARNING)
         IN_REQ<='0';
         OUT_WE<='0';
+        OUT_INV<='0';
+        OUT_DATA<=(others => '0');
       -- end of temporary section
       end if;
       
