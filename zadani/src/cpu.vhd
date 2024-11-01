@@ -198,6 +198,7 @@ begin
         when reset_st=>
           data_ptr<=(others => '0');
           DATA_WDATA<=(others => '0');
+          data_ptr<=(others => '0');
         when others =>
       end case;
     end if;
@@ -245,6 +246,7 @@ begin
       DATA_RDWR<='1';
           DATA_ADDR<=(others => '0');
           DATA_EN<='0';
+          instruction_ptr<=(others => '0');
         when nop_inst=>
           instruction_ptr<=unsigned(instruction_ptr)+1;
         when done_st=>
