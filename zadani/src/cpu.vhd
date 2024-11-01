@@ -52,6 +52,7 @@ dec_ptr_inst, inc_ptr_inst,-- these instructions are used to modify data ptr
 dec_ptr_inst_w, inc_ptr_inst_w,-- these instructions are used to modify data ptr
 inc_val_inst_p,dec_val_inc_p,-- will be used to prepare the instruction to be executed
 inc_val_inst_m,dec_val_inc_m,-- will be in middle of instruction execution
+set_to_tmp_p,set_to_tmp_e,set_to_tmp_w,--will set the value of acc to be equal of current cell
 inc_val_inst_w,dec_val_inc_w, nop_inst);
   signal end_of_code_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal data_ptr: std_logic_vector(12 downto 0):=(others => '0');
@@ -128,6 +129,8 @@ begin
             state<=inc_val_inst_p;
           when X"2D" =>--that is - instruction prefatch
             state<=dec_val_inc_p;
+          when X"24"=>-- set value of acc ($)
+            state<=set_to_tmp_p;
           when X"40" =>
             state<=done_st;
           --must implement execution in next stages of this function
@@ -151,6 +154,9 @@ begin
         when dec_val_inc_p=>state<=dec_val_inc_m;
         when dec_val_inc_m=>state<=dec_val_inc_w;
         when dec_val_inc_w=>state<=fetch_st;
+        when set_to_tmp_p=>state<=set_to_tmp_e;
+        when set_to_tmp_e=>state<=set_to_tmp_w;
+        when set_to_tmp_w=>state<=fetch_st;
         when done_st=>DONE<='1';
         when nop_inst=>state<=fetch_st;
         when others =>
@@ -259,6 +265,16 @@ begin
         when inc_ptr_inst_w=>
           DATA_ADDR<=instruction_ptr;
           DATA_EN<='1';
+        when set_to_tmp_p=>
+          DATA_ADDR<=data_ptr;
+          DATA_EN<='1';
+          DATA_RDWR<='1';
+          instruction_ptr<=unsigned(instruction_ptr)+1;--will start incrementin the instruction_ptr in the preparing phase
+          -- will take more cycles to guarantie that the values will be correct
+        when set_to_tmp_e=>
+          acc_reg<=DATA_RDATA;
+        when set_to_tmp_w=>
+          acc_reg<=DATA_RDATA;
 
         when others =>
       DATA_RDWR<='1';
