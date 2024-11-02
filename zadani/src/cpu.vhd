@@ -199,7 +199,6 @@ begin
         READY<='0';
       -- this is very temporary (WARNING)
         OUT_INV<='0';
-        OUT_DATA<=(others => '0');
       -- end of temporary section
       end if;
       
@@ -276,6 +275,7 @@ begin
           DATA_ADDR<=instruction_ptr;
           DATA_EN<='1';
         when reset_st=>
+        OUT_DATA<=(others => '0');
       DATA_RDWR<='1';
           DATA_ADDR<=(others => '0');
           DATA_EN<='0';
