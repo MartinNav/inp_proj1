@@ -169,12 +169,19 @@ begin
         when get_from_tmp_p=>state<=get_from_tmp_e;
         when get_from_tmp_e=>state<=get_from_tmp_w;
         when get_from_tmp_w=>state<=fetch_st;
-        when put_char_p=>state<=put_char_e;
+        when put_char_p=>
+        if OUT_BUSY='0' then
+          state<=put_char_e;
+          else
+          state<=put_char_p;
+        end if;
         when put_char_e=>state<=put_char_w;
         when put_char_w=>state<=fetch_st;
         when get_char_p=>
           if IN_VLD='1'then
             state<=get_char_e;
+          else
+          state<=get_char_p;
           end if;
         when get_char_e=>state<=get_char_w;
         when get_char_w=>state<=fetch_st;
@@ -191,7 +198,6 @@ begin
         state<=reset_st;
         READY<='0';
       -- this is very temporary (WARNING)
-        OUT_WE<='0';
         OUT_INV<='0';
         OUT_DATA<=(others => '0');
       -- end of temporary section
@@ -265,6 +271,7 @@ begin
           DATA_ADDR<=data_ptr;
           DATA_EN<='1';
         when fetch_st=>
+          OUT_WE<='0';
       DATA_RDWR<='1';
           DATA_ADDR<=instruction_ptr;
           DATA_EN<='1';
@@ -315,6 +322,16 @@ begin
           IN_REQ<='0';
         when get_char_w=>
           DATA_RDWR<='0';
+
+        when put_char_p=>
+          DATA_ADDR<=data_ptr;
+        when put_char_e=>
+          OUT_DATA<=DATA_RDATA;
+          instruction_ptr<=unsigned(instruction_ptr)+1;
+        when put_char_w=>
+          OUT_DATA<=DATA_RDATA;
+          OUT_WE<='1';
+
 
 
         when others =>
