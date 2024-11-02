@@ -54,6 +54,8 @@ inc_val_inst_p,dec_val_inc_p,-- will be used to prepare the instruction to be ex
 inc_val_inst_m,dec_val_inc_m,-- will be in middle of instruction execution
 set_to_tmp_p,set_to_tmp_e,set_to_tmp_w,--will set the value of acc to be equal of current cell
 get_from_tmp_p,get_from_tmp_e,get_from_tmp_w,-- will take the value from acc and put it into current cell
+put_char_p, put_char_e, put_char_w,
+get_char_p, get_char_e, get_char_w,
 inc_val_inst_w,dec_val_inc_w, nop_inst);
   signal end_of_code_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal data_ptr: std_logic_vector(12 downto 0):=(others => '0');
@@ -134,6 +136,10 @@ begin
             state<=set_to_tmp_p;
           when X"21"=>
             state<=get_from_tmp_p;
+          when X"2E"=>
+            state<=put_char_p;
+          when X"2C"=>
+            state<=get_char_p;
           when X"40" =>
             state<=done_st;
           --must implement execution in next stages of this function
@@ -163,6 +169,15 @@ begin
         when get_from_tmp_p=>state<=get_from_tmp_e;
         when get_from_tmp_e=>state<=get_from_tmp_w;
         when get_from_tmp_w=>state<=fetch_st;
+        when put_char_p=>state<=put_char_e;
+        when put_char_e=>state<=put_char_w;
+        when put_char_w=>state<=fetch_st;
+        when get_char_p=>
+          if IN_VLD='1'then
+            state<=get_char_e;
+          end if;
+        when get_char_e=>state<=get_char_w;
+        when get_char_w=>state<=fetch_st;
         when done_st=>DONE<='1';
         when nop_inst=>state<=fetch_st;
         when others =>
@@ -176,7 +191,6 @@ begin
         state<=reset_st;
         READY<='0';
       -- this is very temporary (WARNING)
-        IN_REQ<='0';
         OUT_WE<='0';
         OUT_INV<='0';
         OUT_DATA<=(others => '0');
@@ -292,6 +306,15 @@ begin
           DATA_WDATA<=acc_reg;
         when get_from_tmp_w=>
           DATA_RDWR<='1';--this may still be 0 just to make sure it will be written but I think one cycle is enought
+        when get_char_p=>
+          IN_REQ<='1';
+          DATA_ADDR<=data_ptr;
+        when get_char_e=>
+          DATA_WDATA<=IN_DATA;
+          instruction_ptr<=unsigned(instruction_ptr )+1;
+          IN_REQ<='0';
+        when get_char_w=>
+          DATA_RDWR<='0';
 
 
         when others =>
