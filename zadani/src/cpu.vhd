@@ -62,7 +62,7 @@ inc_val_inst_w,dec_val_inc_w, nop_inst);
   signal instruction_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal setup_state : std_logic:='1';
   signal state : cpu_state:=prepare_st;
-  signal acc_reg: std_logic_vector(12 downto 0):=(others => '0');
+  signal acc_reg: std_logic_vector(8 downto 0):=(others => '0');
   signal fetch_time_ctr : std_logic_vector(2 downto 0):=(others=>'0');--will count the time spent fetching instructions
   signal cycle_counter : std_logic_vector(24 downto 0):=(others => '0');--counting number of cycles from start
 begin
