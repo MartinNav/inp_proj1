@@ -226,6 +226,12 @@ begin
             DATA_WDATA<=unsigned(DATA_RDATA)+1;
           when dec_val_inc_w=>
             DATA_WDATA<=unsigned(DATA_RDATA)-1;
+        when get_from_tmp_p=>
+          DATA_WDATA<=acc_reg;
+        when get_from_tmp_e=>
+          DATA_WDATA<=acc_reg;
+        when get_char_e=>
+          DATA_WDATA<=IN_DATA;
         when reset_st=>
           data_ptr<=(others => '0');
           DATA_WDATA<=(others => '0');
@@ -275,6 +281,7 @@ begin
           DATA_ADDR<=instruction_ptr;
           DATA_EN<='1';
         when reset_st=>
+          IN_REQ<='0';
         OUT_DATA<=(others => '0');
       DATA_RDWR<='1';
           DATA_ADDR<=(others => '0');
@@ -305,19 +312,16 @@ begin
 
         when get_from_tmp_p=>
           DATA_ADDR<=data_ptr;
-          DATA_WDATA<=acc_reg;
           DATA_EN<='1';
           instruction_ptr<=unsigned(instruction_ptr )+1;
         when get_from_tmp_e=>
           DATA_RDWR<='0';
-          DATA_WDATA<=acc_reg;
         when get_from_tmp_w=>
           DATA_RDWR<='1';--this may still be 0 just to make sure it will be written but I think one cycle is enought
         when get_char_p=>
           IN_REQ<='1';
           DATA_ADDR<=data_ptr;
         when get_char_e=>
-          DATA_WDATA<=IN_DATA;
           instruction_ptr<=unsigned(instruction_ptr )+1;
           IN_REQ<='0';
         when get_char_w=>
