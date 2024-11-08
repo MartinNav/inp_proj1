@@ -281,6 +281,7 @@ begin
           DATA_ADDR<=instruction_ptr;
           DATA_EN<='1';
         when reset_st=>
+          OUT_WE<='0';
           IN_REQ<='0';
         OUT_DATA<=(others => '0');
       DATA_RDWR<='1';
