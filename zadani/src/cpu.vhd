@@ -56,6 +56,8 @@ set_to_tmp_p,set_to_tmp_e,set_to_tmp_w,--will set the value of acc to be equal o
 get_from_tmp_p,get_from_tmp_e,get_from_tmp_w,-- will take the value from acc and put it into current cell
 put_char_p, put_char_e, put_char_w,
 get_char_p, get_char_e, get_char_w,
+jump_right_p, jump_right_e,jump_right_w,-- it is equivalent to [ instruction
+jump_left_p, jump_left_e,jump_left_w,--it is equivalent to ] instruction
 inc_val_inst_w,dec_val_inc_w, nop_inst);
   signal end_of_code_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal data_ptr: std_logic_vector(12 downto 0):=(others => '0');
@@ -65,6 +67,8 @@ inc_val_inst_w,dec_val_inc_w, nop_inst);
   signal acc_reg: std_logic_vector(7 downto 0):=(others => '0');
   signal fetch_time_ctr : std_logic_vector(2 downto 0):=(others=>'0');--will count the time spent fetching instructions
   signal cycle_counter : std_logic_vector(24 downto 0):=(others => '0');--counting number of cycles from start
+  signal left_bracked_ptr: std_logic_vector(12 downto 0):=(others => '0');-- this one is pointing torwards the last seen [
+  signal right_bracked_ptr: std_logic_vector(12 downto 0):=(others => '0');-- this one is pointing to the last seen ]
 begin
 
  -- pri tvorbe kodu reflektujte rady ze cviceni INP, zejmena mejte na pameti, ze 
@@ -110,6 +114,12 @@ begin
       if EN='1' then
         
       if setup_state='1' then
+        if (DATA_RDATA=X"5B") and (left_bracked_ptr="000000000000") then
+          left_bracked_ptr<=end_of_code_ptr;
+        end if;
+        if (DATA_RDATA=X"5D") and (right_bracked_ptr="000000000000") then
+          right_bracked_ptr<=end_of_code_ptr;
+        end if;
         state<=prepare_st;
         READY<='0';
       else
@@ -142,6 +152,12 @@ begin
             state<=get_char_p;
           when X"40" =>
             state<=done_st;
+          when X"5B"=>--this is [ so we will jump to the next ]
+            left_bracked_ptr<=instruction_ptr;
+            state<=jump_right_p;
+          when X"5D"=>-- this is ] so we will need to jump to the closest [
+            right_bracked_ptr<=instruction_ptr;
+            state<=jump_left_p;
           --must implement execution in next stages of this function
           when others =>
             -- TODO: fix and make it wait exacly 3 cycles
@@ -187,6 +203,12 @@ begin
         when get_char_w=>state<=fetch_st;
         when done_st=>DONE<='1';
         when nop_inst=>state<=fetch_st;
+        when jump_right_p=>state<=jump_right_e;
+        when jump_right_e=>state<=jump_right_w;
+        when jump_right_w=>state<=fetch_st;
+        when jump_left_p=>state<=jump_left_e;
+        when jump_left_e=>state<=jump_left_w;
+        when jump_left_w=>state<=fetch_st;
         when others =>
           
 
@@ -197,6 +219,8 @@ begin
       if RESET='1' then
         state<=reset_st;
         READY<='0';
+        left_bracked_ptr<=(others => '0');
+        right_bracked_ptr<=(others => '0');
       -- this is very temporary (WARNING)
         OUT_INV<='0';
       -- end of temporary section
@@ -336,6 +360,22 @@ begin
         when put_char_w=>
           OUT_DATA<=DATA_RDATA;
           OUT_WE<='1';
+        when jump_left_p=>
+          DATA_ADDR<=data_ptr;
+        when jump_left_w=>
+          if DATA_RDATA/="00000000" then
+            instruction_ptr<=unsigned(left_bracked_ptr)+1;
+          else
+            instruction_ptr<=unsigned(instruction_ptr)+1;
+          end if;
+        when jump_right_p=>
+          DATA_ADDR<=data_ptr;
+        when jump_right_w=>
+          if DATA_RDATA="00000000" then
+            instruction_ptr<=unsigned(right_bracked_ptr)+1;
+          else
+            instruction_ptr<=unsigned(instruction_ptr)+1;
+          end if;
 
 
 
