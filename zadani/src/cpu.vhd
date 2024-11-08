@@ -115,10 +115,10 @@ begin
         
       if setup_state='1' then
         if (DATA_RDATA=X"5B") and (left_bracked_ptr="000000000000") then
-          left_bracked_ptr<=end_of_code_ptr;
+          left_bracked_ptr<=unsigned(end_of_code_ptr)-2;
         end if;
         if (DATA_RDATA=X"5D") and (right_bracked_ptr="000000000000") then
-          right_bracked_ptr<=end_of_code_ptr;
+          right_bracked_ptr<=unsigned(end_of_code_ptr)-2;
         end if;
         state<=prepare_st;
         READY<='0';
