@@ -62,7 +62,7 @@ inc_val_inst_w,dec_val_inc_w, nop_inst);
   signal instruction_ptr : std_logic_vector(12 downto 0):=(others => '0');
   signal setup_state : std_logic:='1';
   signal state : cpu_state:=prepare_st;
-  signal acc_reg: std_logic_vector(8 downto 0):=(others => '0');
+  signal acc_reg: std_logic_vector(7 downto 0):=(others => '0');
   signal fetch_time_ctr : std_logic_vector(2 downto 0):=(others=>'0');--will count the time spent fetching instructions
   signal cycle_counter : std_logic_vector(24 downto 0):=(others => '0');--counting number of cycles from start
 begin
@@ -230,12 +230,16 @@ begin
           DATA_WDATA<=acc_reg;
         when get_from_tmp_e=>
           DATA_WDATA<=acc_reg;
+        when set_to_tmp_e=>
+          acc_reg<=DATA_RDATA;
+        when set_to_tmp_w=>
+          acc_reg<=DATA_RDATA;
         when get_char_e=>
           DATA_WDATA<=IN_DATA;
         when reset_st=>
+          acc_reg<=(others => '0');
           data_ptr<=(others => '0');
           DATA_WDATA<=(others => '0');
-          data_ptr<=(others => '0');
         when others =>
       end case;
     end if;
@@ -306,10 +310,6 @@ begin
           DATA_RDWR<='1';
           instruction_ptr<=unsigned(instruction_ptr)+1;--will start incrementin the instruction_ptr in the preparing phase
           -- will take more cycles to guarantie that the values will be correct
-        when set_to_tmp_e=>
-          acc_reg<=DATA_RDATA;
-        when set_to_tmp_w=>
-          acc_reg<=DATA_RDATA;
 
         when get_from_tmp_p=>
           DATA_ADDR<=data_ptr;
