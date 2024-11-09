@@ -362,19 +362,19 @@ begin
           OUT_WE<='1';
         when jump_left_p=>
           DATA_ADDR<=data_ptr;
+        when jump_left_e=>
+            instruction_ptr<=unsigned(instruction_ptr)+1;
         when jump_left_w=>
           if DATA_RDATA/="00000000" then
             instruction_ptr<=unsigned(left_bracked_ptr)+1;
-          else
-            instruction_ptr<=unsigned(instruction_ptr)+1;
           end if;
         when jump_right_p=>
           DATA_ADDR<=data_ptr;
+        when jump_right_e=>
+          instruction_ptr<=unsigned(instruction_ptr)+1;
         when jump_right_w=>
           if DATA_RDATA="00000000" then
             instruction_ptr<=unsigned(right_bracked_ptr)+1;
-          else
-            instruction_ptr<=unsigned(instruction_ptr)+1;
           end if;
 
 
