@@ -273,6 +273,7 @@ begin
   begin
     if rising_edge(CLK) then
      -- DATA_RDWR<='1';
+      OUT_WE<='0';
       case state is
         when prepare_st=>
           DATA_ADDR<=end_of_code_ptr;
@@ -376,6 +377,10 @@ begin
           if DATA_RDATA="00000000" then
             instruction_ptr<=unsigned(right_bracked_ptr)+1;
           end if;
+        when dec_ptr_inst=>
+          instruction_ptr<=unsigned(instruction_ptr)+1;
+        when dec_ptr_inst_w=>
+          DATA_ADDR<=instruction_ptr;
 
 
 
